@@ -1,8 +1,8 @@
 import 'package:fled/theme.dart';
 import 'package:flutter/widgets.dart';
 
-class EmptyPanel extends StatelessWidget {
-  const EmptyPanel({Key? key}) : super(key: key);
+class EmptyPanelWidget extends StatelessWidget {
+  const EmptyPanelWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

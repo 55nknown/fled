@@ -20,27 +20,29 @@ class Fled extends StatelessWidget {
         textDirection: TextDirection.ltr,
         child: MediaQuery(
           data: MediaQueryData.fromWindow(window),
-          child: _providerBuilder(context),
+          child: _providerBuilder(),
         ),
       ),
     );
   }
 
-  Widget _providerBuilder(BuildContext context) {
+  Widget _providerBuilder() {
     final providers = Providers();
 
     return MultiProvider(
       providers: providers.toList(),
-      child: RawKeyboardListener(
-        // Global keyboard handler
-        onKey: providers.keyboardInput.registerHandler(),
-        focusNode: FocusNode(),
-        child: _themedBuilder(context),
-      ),
+      builder: (context, child) {
+        return RawKeyboardListener(
+          // Global keyboard handler
+          onKey: providers.keyboardInput.registerHandler(),
+          focusNode: FocusNode(),
+          child: _themedBuilder(),
+        );
+      },
     );
   }
 
-  Widget _themedBuilder(BuildContext context) {
+  Widget _themedBuilder() {
     return Theme(
       child: Builder(
         builder: (context) {

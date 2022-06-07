@@ -1,4 +1,4 @@
-import 'package:fled/ui/panels/empty_panel.dart';
+import 'package:fled/ui/panel_builder.dart';
 import 'package:flutter/widgets.dart';
 
 class Frame extends StatelessWidget {
@@ -6,6 +6,6 @@ class Frame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const EmptyPanel();
+    return const PanelBuilder();
   }
 }
