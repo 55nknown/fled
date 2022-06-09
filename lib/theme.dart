@@ -31,24 +31,30 @@ class ThemeData {
 class Colors {
   const Colors();
 
-  final red = const Color(0xFFF01044);
-  final pink = const Color(0xFFFF375F);
-  final purple = const Color(0xFF6F6DF0);
-  final blue = const Color(0xFF0084FF);
-  final teal = const Color(0xFF00B8A3);
-  final green = const Color(0xFF4DBB5F);
-  final yellow = const Color(0xFFFAD075);
-  final orange = const Color(0xFFFF8500);
+  static const white = Color(0xFFFFFFFF);
+  static const black = Color(0xFF000000);
+
+  static const red = Color(0xFFF01044);
+  static const pink = Color(0xFFFF375F);
+  static const purple = Color(0xFF6F6DF0);
+  static const blue = Color(0xFF0084FF);
+  static const teal = Color(0xFF00B8A3);
+  static const green = Color(0xFF4DBB5F);
+  static const yellow = Color(0xFFFAD075);
+  static const orange = Color(0xFFFF8500);
+
+  static const suggested = Color(0xFF5A9BE9);
+  static const destructive = Color(0xFFE01B24);
 }
 
 class CodeTheme {
   const CodeTheme();
 
-  final token1 = const Color(0xFFC678DD);
-  final token2 = const Color(0xFFE06C75);
-  final token3 = const Color(0xFF98C379);
-  final token4 = const Color(0xFFE5C07B);
-  final token5 = const Color(0xFF61AFEF);
-  final token6 = const Color(0xFF54AFBB);
-  final token7 = const Color(0xFFABB2BF);
+  static const token1 = Color(0xFFC678DD);
+  static const token2 = Color(0xFFE06C75);
+  static const token3 = Color(0xFF98C379);
+  static const token4 = Color(0xFFE5C07B);
+  static const token5 = Color(0xFF61AFEF);
+  static const token6 = Color(0xFF54AFBB);
+  static const token7 = Color(0xFFABB2BF);
 }

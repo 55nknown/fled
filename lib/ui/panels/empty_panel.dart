@@ -12,7 +12,8 @@ class EmptyPanelWidget extends StatelessWidget {
         style: TextStyle(
           fontSize: 42.0,
           fontFamilyFallback: Theme.of(context).fonts,
-          color: Theme.of(context).muted,
+          color: Theme.of(context).highlight,
+          shadows: [Shadow(color: Colors.black.withOpacity(.2), blurRadius: 6.0)],
         ),
       ),
     );

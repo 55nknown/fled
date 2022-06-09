@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:fled/providers.dart';
 import 'package:fled/theme.dart';
 import 'package:fled/ui/frame.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +16,7 @@ class Fled extends StatelessWidget {
       locale: const Locale("en", "US"),
       delegates: const [
         DefaultWidgetsLocalizations.delegate,
+        material.DefaultMaterialLocalizations.delegate,
       ],
       child: Directionality(
         textDirection: TextDirection.ltr,
@@ -32,12 +34,7 @@ class Fled extends StatelessWidget {
     return MultiProvider(
       providers: providers.toList(),
       builder: (context, child) {
-        return RawKeyboardListener(
-          // Global keyboard handler
-          onKey: providers.keyboardInput.registerHandler(),
-          focusNode: FocusNode(),
-          child: _themedBuilder(),
-        );
+        return _themedBuilder();
       },
     );
   }
