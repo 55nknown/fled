@@ -5,6 +5,12 @@ class ExplorerPanelWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Fled"),
+        
+      ],
+    );
   }
 }
