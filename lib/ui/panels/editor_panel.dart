@@ -73,7 +73,6 @@ class _EditorPanelWidgetState extends State<EditorPanelWidget> {
                 return ValueListenableBuilder(
                   valueListenable: scrollOffset,
                   builder: (context, value, child) {
-                    print(scrollOffset.value);
                     return CustomPaint(
                       painter: EditorPainter(text: utf8.decode(buffer.value), offset: scrollOffset.value, theme: Theme.of(context)),
                     );
@@ -92,12 +91,14 @@ class EditorPainter extends CustomPainter {
   ThemeData theme;
   String text;
   Offset offset;
+  static const Offset padding = Offset(6.0, 12.0);
+  static const Offset textPadding = Offset(12.0, 0.0);
 
   TextPainter lineNumbersLayout(Canvas canvas, Size size) {
     final lineNumberPainter = TextPainter(
       text: TextSpan(
         text: "${List.generate(text.split("\n").length, (i) => "${i + 1}").join("\n")}\n${" " * 5}",
-        style: TextStyle(fontFamilyFallback: theme.fonts),
+        style: TextStyle(fontFamilyFallback: theme.fonts, color: theme.muted),
       ),
       textAlign: TextAlign.right,
       textDirection: TextDirection.ltr,
@@ -109,10 +110,10 @@ class EditorPainter extends CustomPainter {
 
   void lineNumbersPaint(Canvas canvas, Size size, TextPainter lineNumbersPainter) {
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, lineNumbersPainter.width, size.height),
+      Rect.fromLTWH(0, 0, lineNumbersPainter.width + padding.dx + textPadding.dx, size.height),
       Paint()..color = theme.background,
     );
-    lineNumbersPainter.paint(canvas, Offset(0.0, offset.dy));
+    lineNumbersPainter.paint(canvas, Offset(0.0, offset.dy) + padding);
   }
 
   @override
@@ -122,12 +123,12 @@ class EditorPainter extends CustomPainter {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(fontFamilyFallback: theme.fonts),
+        style: TextStyle(fontFamilyFallback: theme.fonts, fontWeight: FontWeight.w300),
       ),
       textDirection: TextDirection.ltr,
     );
     painter.layout();
-    painter.paint(canvas, offset + Offset(lineNumbersPainter.width, 0.0));
+    painter.paint(canvas, offset + Offset(lineNumbersPainter.width, 0.0) + padding + textPadding);
 
     lineNumbersPaint(canvas, size, lineNumbersPainter);
   }
