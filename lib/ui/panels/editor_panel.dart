@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:fled/theme.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -10,8 +13,8 @@ class EditorPanelWidget extends StatefulWidget {
 }
 
 class _EditorPanelWidgetState extends State<EditorPanelWidget> {
-  String buffer = "";
-  Offset cursor = const Offset(0, 0);
+  final ValueNotifier<List<int>> buffer = ValueNotifier([]);
+  final ValueNotifier<Offset> scrollOffset = ValueNotifier(Offset.zero);
 
   @override
   void initState() {
@@ -25,56 +28,58 @@ class _EditorPanelWidgetState extends State<EditorPanelWidget> {
     super.dispose();
   }
 
-  int _cursorOffset() {
-    int offset = (cursor.dx + cursor.dy).toInt();
-    final lines = buffer.split("\n");
-
-    for (int i = 0; i < cursor.dy; i++) {
-      offset += lines[i].length;
-    }
-
-    return offset;
-  }
-
   void _onKey(RawKeyEvent event) {
-    if (event is RawKeyUpEvent) return;
-
     if (event is RawKeyDownEvent) {
       if (event.data.logicalKey == LogicalKeyboardKey.enter) {
-        cursor = Offset(0, cursor.dy + 1);
-        setState(() => buffer += "\n");
+        buffer.value += utf8.encode("\n");
         return;
-      } else if (event.data.logicalKey == LogicalKeyboardKey.backspace) {
-        if (buffer.isNotEmpty) {
-          cursor += Offset(-1, buffer[_cursorOffset()] == "\n" ? -1 : 0);
-          setState(() => buffer = buffer.substring(0, buffer.length - 1));
-        }
-        return;
-      } else if (event.data.logicalKey == LogicalKeyboardKey.arrowUp) {
-        setState(() => cursor += const Offset(0, -1));
-        return;
-      } else if (event.data.logicalKey == LogicalKeyboardKey.arrowDown) {
-        setState(() => cursor += const Offset(0, 1));
-        return;
-      } else if (event.data.logicalKey == LogicalKeyboardKey.arrowRight) {
-        setState(() => cursor += const Offset(1, 0));
-        return;
-      } else if (event.data.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        setState(() => cursor += const Offset(-1, 0));
+      }
+
+      if (event.data.logicalKey == LogicalKeyboardKey.backspace) {
+        buffer.value = buffer.value.sublist(0, buffer.value.length - 1);
         return;
       }
     }
 
-    cursor += const Offset(1, 0);
-    setState(() => buffer += event.character ?? "");
+    if (event.character != null) buffer.value += utf8.encode(event.character!);
+  }
+
+  bool checkScroll(PointerScrollEvent event) {
+    if ((scrollOffset.value - event.scrollDelta).dx > 0) {
+      scrollOffset.value = Offset(0, scrollOffset.value.dy);
+      return false;
+    }
+
+    if ((scrollOffset.value - event.scrollDelta).dy > 0) {
+      scrollOffset.value = Offset(scrollOffset.value.dx, 0);
+      return false;
+    }
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      child: SizedBox.expand(
-        child: CustomPaint(
-          painter: EditorPainter(buffer: buffer, cursor: cursor, theme: Theme.of(context)),
+    return ClipRect(
+      child: Listener(
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent && checkScroll(event)) {
+            scrollOffset.value -= event.scrollDelta;
+          }
+        },
+        child: SizedBox.expand(
+          child: ValueListenableBuilder(
+              valueListenable: buffer,
+              builder: (context, value, child) {
+                return ValueListenableBuilder(
+                  valueListenable: scrollOffset,
+                  builder: (context, value, child) {
+                    print(scrollOffset.value);
+                    return CustomPaint(
+                      painter: EditorPainter(text: utf8.decode(buffer.value), offset: scrollOffset.value, theme: Theme.of(context)),
+                    );
+                  },
+                );
+              }),
         ),
       ),
     );
@@ -82,42 +87,49 @@ class _EditorPanelWidgetState extends State<EditorPanelWidget> {
 }
 
 class EditorPainter extends CustomPainter {
-  EditorPainter({required this.buffer, required this.theme, required this.cursor});
+  EditorPainter({this.text = "", this.offset = Offset.zero, required this.theme});
 
-  String buffer;
-  Offset cursor;
-  final ThemeData theme;
+  ThemeData theme;
+  String text;
+  Offset offset;
+
+  TextPainter lineNumbersLayout(Canvas canvas, Size size) {
+    final lineNumberPainter = TextPainter(
+      text: TextSpan(
+        text: "${List.generate(text.split("\n").length, (i) => "${i + 1}").join("\n")}\n${" " * 5}",
+        style: TextStyle(fontFamilyFallback: theme.fonts),
+      ),
+      textAlign: TextAlign.right,
+      textDirection: TextDirection.ltr,
+    );
+    lineNumberPainter.layout();
+
+    return lineNumberPainter;
+  }
+
+  void lineNumbersPaint(Canvas canvas, Size size, TextPainter lineNumbersPainter) {
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, lineNumbersPainter.width, size.height),
+      Paint()..color = theme.background,
+    );
+    lineNumbersPainter.paint(canvas, Offset(0.0, offset.dy));
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final lines = buffer.split("\n");
+    final lineNumbersPainter = lineNumbersLayout(canvas, size);
 
-    final text = TextPainter(
-      textAlign: TextAlign.right,
+    final painter = TextPainter(
       text: TextSpan(
-          text: [...List.generate(lines.length, (index) => "${index + 1}"), " " * 4].join("\n"),
-          style: TextStyle(fontFamilyFallback: theme.fonts, fontSize: 16.0, color: theme.muted)),
+        text: text,
+        style: TextStyle(fontFamilyFallback: theme.fonts),
+      ),
       textDirection: TextDirection.ltr,
     );
-    text.layout();
-    text.paint(canvas, const Offset(24.0, 12.0));
+    painter.layout();
+    painter.paint(canvas, offset + Offset(lineNumbersPainter.width, 0.0));
 
-    final btext = TextPainter(
-      text: TextSpan(text: buffer, style: TextStyle(fontFamilyFallback: theme.fonts, fontSize: 16.0, color: theme.foreground)),
-      textDirection: TextDirection.ltr,
-    );
-    btext.layout();
-    btext.paint(canvas, Offset(24 + text.width + 12, 12));
-
-    final ltext = TextPainter(
-      text: TextSpan(
-          text: lines[cursor.dy.toInt()].substring(0, cursor.dx.toInt()),
-          style: TextStyle(fontFamilyFallback: theme.fonts, fontSize: 16.0, color: theme.foreground)),
-      textDirection: TextDirection.ltr,
-    );
-    ltext.layout();
-
-    canvas.drawRect(Rect.fromLTWH(24 + text.width + 12 + ltext.width, 12 + ltext.height * cursor.dy, 4, 20), Paint()..color = Colors.suggested);
+    lineNumbersPaint(canvas, size, lineNumbersPainter);
   }
 
   @override
